@@ -80,3 +80,17 @@ class Cache:
         """Get data from cache as integer
         """
         return self.get(key, int)
+
+    def replay(self, method: Callable):
+        """Replay history of calls to method
+        """
+        method_name = method.__qualname__
+        count = self._redis.get(method_name).decode('utf-8')
+        inputs = self._redis.lrange(f"{method_name}:inputs", 0, -1)
+        outputs = self._redis.lrange(f"{method_name}:outputs", 0, -1)
+
+        print(f"{method_name} was called {count} times:")
+
+        for input, output in zip(inputs, outputs):
+            print(f"{method_name}(*{input.decode('utf-8')}) -> "
+                  f"{output.decode('utf-8')}")
